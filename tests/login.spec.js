@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-// Core Node modules for creating the screenshots folder and file paths
+
 const fs = require('fs');
 const path = require('path');
 

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(node -e \"require\\('./locators/leadLocators'\\); require\\('./test-data/leadData'\\); require\\('./pages/CreateLeadPage'\\); require\\('./tests/createLead.spec.js'\\); console.log\\('OK - all modules parse'\\)\" 2>&1)",
+      "PowerShell(npx playwright test --list 2>&1)",
+      "PowerShell(npx playwright test --list; Write-Output \"EXIT:$LASTEXITCODE\")",
+      "PowerShell(Test-Path playwright-list-output.txt; \\(Get-Item playwright-list-output.txt -ErrorAction SilentlyContinue\\).Length)",
+      "PowerShell(node --check \"locators/leadLocators.js\")",
+      "PowerShell(node --check \"pages/CreateLeadPage.js\")",
+      "PowerShell(node --check \"test-data/leadData.js\")",
+      "PowerShell(node --check \"tests/createLead.spec.js\")",
+      "PowerShell(npx playwright test tests/createLead.spec.js)",
+      "PowerShell(node --check \"utils/excelReader.js\")",
+      "PowerShell(node --check \"tests/onboardCompanyLead.spec.js\")"
+    ]
+  }
+}

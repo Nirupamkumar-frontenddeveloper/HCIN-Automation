@@ -43,7 +43,12 @@ test.afterEach(async ({ page }, testInfo) => {
 });
 
 // Test case: login and logout flow
-test('Login and Logout', async ({ page }, testInfo) => {
+test('Login and Logout', {
+    annotation: {
+        type: 'description',
+        description: 'Logs into LOS with a valid Sales RM user, verifies the Sales Dashboard is visible, then logs out and confirms the login screen reappears.'
+    }
+}, async ({ page }, testInfo) => {
 
     const loginPage = new LoginPage(page);
 

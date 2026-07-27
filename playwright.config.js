@@ -45,7 +45,10 @@ module.exports = defineConfig({
         ['html', {
             outputFolder: 'playwright-report',
             open: 'always'
-        }]
+        }],
+
+        // Generates a downloadable Word (.docx) report with test descriptions
+        ['./reporters/wordReporter.js']
 
     ],
 

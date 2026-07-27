@@ -11,7 +11,10 @@
       "PowerShell(node --check \"tests/createLead.spec.js\")",
       "PowerShell(npx playwright test tests/createLead.spec.js)",
       "PowerShell(node --check \"utils/excelReader.js\")",
-      "PowerShell(node --check \"tests/onboardCompanyLead.spec.js\")"
+      "PowerShell(node --check \"tests/onboardCompanyLead.spec.js\")",
+      "PowerShell(node --check \"reporters/wordReporter.js\")",
+      "PowerShell(node --check \"tests/login.spec.js\")",
+      "PowerShell(node --check \"playwright.config.js\")"
     ]
   }
 }

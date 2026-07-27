@@ -49,7 +49,12 @@ const program = {
     proposedLimit: raw.proposedLimit
 };
 
-test('Create New Company Lead', async ({ page }) => {
+test('Create New Company Lead', {
+    annotation: {
+        type: 'description',
+        description: 'Logs in as Sales RM, creates a new lead for a company/corporate entity (GSTIN, CIN, LEI, key person, address & program details), uploads a KYC document and submits it, using test data read from fixtures/companyLeadData.xlsx.'
+    }
+}, async ({ page }) => {
 
     const loginPage = new LoginPage(page);
     const leadPage = new CreateLeadPage(page);

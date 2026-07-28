@@ -8,7 +8,9 @@ function readKeyValueSheet(filePath, sheetName) {
 
     const data = {};
     rows.forEach(row => {
-        data[row.Field] = row.Value;
+        // xlsx auto-types purely numeric cells (mobile, pincode, etc.) as JS numbers,
+        // but Playwright's fill() requires a string
+        data[row.Field] = row.Value === undefined ? row.Value : String(row.Value);
     });
 
     return data;

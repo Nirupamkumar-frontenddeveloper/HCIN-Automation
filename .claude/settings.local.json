@@ -14,7 +14,8 @@
       "PowerShell(node --check \"tests/onboardCompanyLead.spec.js\")",
       "PowerShell(node --check \"reporters/wordReporter.js\")",
       "PowerShell(node --check \"tests/login.spec.js\")",
-      "PowerShell(node --check \"playwright.config.js\")"
+      "PowerShell(node --check \"playwright.config.js\")",
+      "Bash(node debug_oem.js)"
     ]
   }
 }

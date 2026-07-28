@@ -17,6 +17,7 @@ const entity = {
     gstin: raw.gstin,
     entityName: raw.entityName,
     tradeName: raw.tradeName,
+    constitution: raw.constitution,
     incomeRange: raw.incomeRange,
     cin: raw.cin,
     dobDay: raw.dobDay,
@@ -24,7 +25,8 @@ const entity = {
     dobYear: raw.dobYear,
     lei: raw.lei,
     leiExpiryDate: raw.leiExpiryDate,
-    isListed: raw.isListed,
+    leiApplicability: raw.leiApplicability,
+    msmeApplicability: raw.msmeApplicability,
     natureOfBusiness: raw.natureOfBusiness
 };
 
@@ -54,35 +56,44 @@ test('Create New Company Lead', {
         type: 'description',
         description: 'Logs in as Sales RM, creates a new lead for a company/corporate entity (GSTIN, CIN, LEI, key person, address & program details), uploads a KYC document and submits it, using test data read from fixtures/companyLeadData.xlsx.'
     }
-}, async ({ page }) => {
+}, async ({ page }, testInfo) => {
 
     const loginPage = new LoginPage(page);
     const leadPage = new CreateLeadPage(page);
 
-    // Login (each test gets its own isolated browser context, so this always logs in fresh)
-    await loginPage.openLOS();
-    await loginPage.login(users.salesRM.username, users.salesRM.password);
+    try {
+        // Login (each test gets its own isolated browser context, so this always logs in fresh)
+        await loginPage.openLOS();
+        await loginPage.login(users.salesRM.username, users.salesRM.password);
 
-    // Entity details
-    await leadPage.createNewLead();
-    await leadPage.selectNewCustomer();
-    await leadPage.selectManufacturer(raw.manufacturer);
-    await leadPage.fillEntityDetails(entity);
+        // Entity details
+        await leadPage.createNewLead();
+        await leadPage.selectNewCustomer();
+        await leadPage.selectManufacturer(raw.manufacturer);
+        await leadPage.fillEntityDetails(entity);
 
-    // Key person details
-    await leadPage.fillKeyPersonDetails(keyPerson);
+        // Key person details
+        await leadPage.fillKeyPersonDetails(keyPerson);
 
-    // Address & program details
-    await leadPage.fillAddressDetails(address);
-    await leadPage.fillProgramDetails(program);
+        // Address & program details
+        await leadPage.fillAddressDetails(address);
+        await leadPage.fillProgramDetails(program);
 
-    // Document upload & remarks
-    await leadPage.uploadDocument(sampleDoc);
-    await leadPage.fillRemarks(raw.remarks);
-    await leadPage.submit();
+        // Document upload & remarks
+        await leadPage.uploadDocument(sampleDoc);
+        await leadPage.fillRemarks(raw.remarks);
+        await leadPage.submit();
 
-    // Follow-up section
-    await leadPage.fillFollowUpEmail(raw.followUpEmail);
-    await leadPage.submit();
+        // Follow-up section
+        await leadPage.fillFollowUpEmail(raw.followUpEmail);
+        await leadPage.submit();
+    } finally {
+        // Attach the field-by-field pass/fail results so the Word reporter can render them,
+        // even when the test fails partway through
+        await testInfo.attach('field-report', {
+            body: JSON.stringify(leadPage.fieldReport),
+            contentType: 'application/json'
+        });
+    }
 
 });

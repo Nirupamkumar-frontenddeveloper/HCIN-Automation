@@ -1,7 +1,6 @@
 const loc = require('../locators/leadLocators');
 const BasePage = require('./BasePage');
 
-// Page object for the "Create New Lead" flow for a company / corporate entity
 class CreateLeadPage extends BasePage {
 
     async createNewLead() {

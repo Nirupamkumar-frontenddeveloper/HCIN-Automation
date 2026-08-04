@@ -16,4 +16,23 @@ function readKeyValueSheet(filePath, sheetName) {
     return data;
 }
 
-module.exports = { readKeyValueSheet };
+// Updates a subset of Field/Value rows in place and writes the sheet back to disk,
+// leaving every other row untouched. Used to persist freshly-generated unique
+// identifiers (GSTIN/CIN/Entity Name) so a later test reading the same file sees them.
+function updateKeyValueSheet(filePath, updates, sheetName) {
+    const workbook = XLSX.readFile(filePath);
+    const resolvedSheetName = sheetName || workbook.SheetNames[0];
+    const sheet = workbook.Sheets[resolvedSheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+
+    const updatedRows = rows.map(row => (
+        Object.prototype.hasOwnProperty.call(updates, row.Field)
+            ? { Field: row.Field, Value: updates[row.Field] }
+            : row
+    ));
+
+    workbook.Sheets[resolvedSheetName] = XLSX.utils.json_to_sheet(updatedRows);
+    XLSX.writeFile(workbook, filePath);
+}
+
+module.exports = { readKeyValueSheet, updateKeyValueSheet };

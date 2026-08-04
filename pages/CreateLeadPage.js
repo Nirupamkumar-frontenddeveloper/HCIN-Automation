@@ -1,36 +1,8 @@
 const loc = require('../locators/leadLocators');
+const BasePage = require('./BasePage');
 
 // Page object for the "Create New Lead" flow for a company / corporate entity
-class CreateLeadPage {
-
-    constructor(page) {
-        this.page = page;
-        // Field-by-field results collected as the form is filled, used by the Word reporter
-        this.fieldReport = [];
-    }
-
-    // Resolve a locator entry that is either a { role, name } descriptor or a plain selector string
-    byRole(descriptor, options = {}) {
-        return this.page.getByRole(descriptor.role, { name: descriptor.name, ...options });
-    }
-
-    // Run a field-level action and record whether it passed or failed for the report,
-    // then rethrow so the test still stops/fails at the right place
-    async step(field, value, action) {
-        try {
-            await action();
-            this.fieldReport.push({ field, value: value === undefined || value === null ? '' : String(value), status: 'Pass' });
-        } catch (err) {
-            this.fieldReport.push({ field, value: value === undefined || value === null ? '' : String(value), status: 'Fail', error: err.message });
-            throw err;
-        }
-    }
-
-    // Open a mat-select combobox and pick an option by its visible text
-    async selectOption(descriptor, optionName) {
-        await this.byRole(descriptor).click();
-        await this.page.getByRole('option', { name: optionName, exact: true }).click();
-    }
+class CreateLeadPage extends BasePage {
 
     async createNewLead() {
         await this.step('Create New Lead', '', () => this.byRole(loc.createNewLeadBtn).click());
@@ -43,11 +15,20 @@ class CreateLeadPage {
     async selectManufacturer(name) {
         await this.step('OEM', name, async () => {
             const oem = this.byRole(loc.oemSelect);
-            await oem.click();
-            if ((await oem.getAttribute('aria-expanded')) !== 'true') {
+            const option = this.page.getByRole('option', { name, exact: true });
+
+            // The first dropdown on a freshly-loaded page can be slow/flaky to open on
+            // the first click - keep clicking until the option list actually renders
+            let opened = false;
+            for (let attempt = 1; attempt <= 5 && !opened; attempt++) {
                 await oem.click();
+                opened = await option.first().waitFor({ state: 'visible', timeout: 3000 }).then(() => true).catch(() => false);
+                if (!opened) {
+                    await this.page.keyboard.press('Escape').catch(() => {});
+                }
             }
-            await this.page.getByRole('option', { name, exact: true }).click();
+
+            await option.click();
         });
     }
 

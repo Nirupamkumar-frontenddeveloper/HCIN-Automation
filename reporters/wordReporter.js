@@ -5,6 +5,7 @@ const {
     Packer,
     Paragraph,
     TextRun,
+    ImageRun,
     HeadingLevel,
     Table,
     TableRow,
@@ -168,11 +169,29 @@ class WordReporter {
         });
 
         const buffer = await Packer.toBuffer(doc);
-        const fileName = `test-report-${this.startTime.toISOString().replace(/[:.]/g, '-')}.docx`;
+        const entitySlug = this.findEntityName();
+        const timestamp = this.startTime.toISOString().replace(/[:.]/g, '-');
+        const fileName = entitySlug
+            ? `test-report-${entitySlug}-${timestamp}.docx`
+            : `test-report-${timestamp}.docx`;
         const filePath = path.join(reportsDir, fileName);
         fs.writeFileSync(filePath, buffer);
 
         console.log(`\nWord report generated: ${filePath}`);
+    }
+
+    // Pulls the entity name recorded by the lead-creation test's field report, if present,
+    // so the report filename identifies which lead this run was about
+    findEntityName() {
+        const entityField = this.results
+            .flatMap(r => r.fields)
+            .find(f => f.field === 'Entity Name' && f.value);
+
+        if (!entityField) {
+            return null;
+        }
+
+        return entityField.value.replace(/[^a-zA-Z0-9-_]+/g, '_').slice(0, 60);
     }
 
     buildSummaryCards(total, passed, failed, skipped) {
@@ -272,10 +291,11 @@ class WordReporter {
         const headerRow = new TableRow({
             tableHeader: true,
             children: [
-                this.headerCell('#', 8),
-                this.headerCell('Field', 32),
-                this.headerCell('Value Entered', 40),
-                this.headerCell('Status', 20)
+                this.headerCell('#', 5),
+                this.headerCell('Field', 17),
+                this.headerCell('Value Entered', 20),
+                this.headerCell('Status', 10),
+                this.headerCell('Screenshot', 48)
             ]
         });
 
@@ -285,10 +305,11 @@ class WordReporter {
             const bg = isPass ? COLORS.passedBg : COLORS.failedBg;
             return new TableRow({
                 children: [
-                    this.bodyCell(i + 1, 8),
-                    this.bodyCell(f.field, 32),
-                    this.bodyCell(f.value || '-', 40),
-                    this.bodyCell(isPass ? 'PASS' : 'FAIL', 20, { bold: true, color, bg })
+                    this.bodyCell(i + 1, 5),
+                    this.bodyCell(f.field, 17),
+                    this.bodyCell(f.value || '-', 20),
+                    this.bodyCell(isPass ? 'PASS' : 'FAIL', 10, { bold: true, color, bg }),
+                    this.screenshotCell(f.screenshotPath, 48)
                 ]
             });
         });
@@ -296,6 +317,29 @@ class WordReporter {
         return new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [headerRow, ...dataRows]
+        });
+    }
+
+    screenshotCell(screenshotPath, widthPct) {
+        let children = [new Paragraph({ children: [new TextRun({ text: '-', color: '999999' })] })];
+
+        if (screenshotPath && fs.existsSync(screenshotPath) && fs.statSync(screenshotPath).size > 0) {
+            try {
+                const data = fs.readFileSync(screenshotPath);
+                children = [new Paragraph({
+                    children: [new ImageRun({ type: 'png', data, transformation: { width: 220, height: 124 } })]
+                })];
+            } catch {
+                // Keep the placeholder dash if the image can't be read/embedded -
+                // one bad file should never take down the whole report
+            }
+        }
+
+        return new TableCell({
+            width: { size: widthPct, type: WidthType.PERCENTAGE },
+            borders: CELL_BORDER,
+            margins: { top: 80, bottom: 80, left: 100, right: 100 },
+            children
         });
     }
 }

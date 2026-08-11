@@ -309,7 +309,7 @@ class WordReporter {
                     this.bodyCell(f.field, 17),
                     this.bodyCell(f.value || '-', 20),
                     this.bodyCell(isPass ? 'PASS' : 'FAIL', 10, { bold: true, color, bg }),
-                    this.screenshotCell(f.screenshotPath, 48)
+                    this.screenshotCell(f.screenshotBase64, 48)
                 ]
             });
         });
@@ -320,18 +320,18 @@ class WordReporter {
         });
     }
 
-    screenshotCell(screenshotPath, widthPct) {
+    screenshotCell(screenshotBase64, widthPct) {
         let children = [new Paragraph({ children: [new TextRun({ text: '-', color: '999999' })] })];
 
-        if (screenshotPath && fs.existsSync(screenshotPath) && fs.statSync(screenshotPath).size > 0) {
+        if (screenshotBase64) {
             try {
-                const data = fs.readFileSync(screenshotPath);
+                const data = Buffer.from(screenshotBase64, 'base64');
                 children = [new Paragraph({
                     children: [new ImageRun({ type: 'png', data, transformation: { width: 220, height: 124 } })]
                 })];
             } catch {
-                // Keep the placeholder dash if the image can't be read/embedded -
-                // one bad file should never take down the whole report
+                // Keep the placeholder dash if the image can't be decoded/embedded -
+                // one bad screenshot should never take down the whole report
             }
         }
 

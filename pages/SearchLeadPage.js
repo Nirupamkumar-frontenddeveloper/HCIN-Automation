@@ -4,10 +4,6 @@ const BasePage = require('./BasePage');
 // Page object for finding an existing lead via the "Leads > Loan Applications" list and opening it
 class SearchLeadPage extends BasePage {
 
-    async toggleSidebar() {
-        await this.step('Toggle Sidebar', '', () => this.page.getByRole('button', { name: 'toggle sidebar' }).click());
-    }
-
     async openLeadsLoanApplications() {
         await this.toggleSidebar();
         await this.step('Open Leads Menu', '', () => this.byRole(loc.leadsNavBtn).click());
@@ -21,16 +17,18 @@ class SearchLeadPage extends BasePage {
             const row = this.page.getByRole('row', { name: entityName }).first();
 
             // A lead created moments ago can take a little while to show up in the list/search
-            // index, so retry a few times (reloading to force a fresh fetch) before giving up
-            const maxAttempts = 4;
+            // index, so retry a few times before giving up. page.reload() here was flaky (it
+            // could tear down the browser context mid-navigation), so just re-fill/re-search
+            // with a growing wait instead.
+            const maxAttempts = 5;
             for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                await searchBox.fill('');
                 await searchBox.fill(entityName);
                 await searchBox.press('Enter');
-                const found = await row.waitFor({ state: 'visible', timeout: 5000 }).then(() => true).catch(() => false);
+                const found = await row.waitFor({ state: 'visible', timeout: 6000 }).then(() => true).catch(() => false);
                 if (found) return;
                 if (attempt < maxAttempts) {
-                    await this.page.reload();
-                    await searchBox.waitFor({ state: 'visible' });
+                    await this.wait(3000);
                 }
             }
 

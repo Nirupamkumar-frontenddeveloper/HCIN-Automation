@@ -4,9 +4,6 @@ require('dotenv').config();
 // Export all application users
 module.exports = {
 
-    // =========================
-    // LOS USERS
-    // =========================
 
     salesRM: {
         username: process.env.SALES_RM_USERNAME,

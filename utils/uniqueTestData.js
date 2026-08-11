@@ -1,5 +1,6 @@
-// Generates fresh, plausible-format identifiers for each run so re-running the suite
-// never collides with a previously-created lead (duplicate GSTIN/CIN/Entity Name)
+// Generates fresh, plausible-format GSTIN/CIN for each run so re-running the suite
+// never collides with a previously-created lead (duplicate detection is keyed on these,
+// not on the entity name, so the name itself is left untouched)
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
@@ -29,8 +30,4 @@ function generateCIN() {
     return `U${randomDigits(5)}MH${new Date().getFullYear()}PTC${randomDigits(6)}`;
 }
 
-function uniqueSuffix() {
-    return `${Date.now()}`.slice(-6);
-}
-
-module.exports = { generateGSTIN, generateCIN, uniqueSuffix };
+module.exports = { generateGSTIN, generateCIN };

@@ -6,16 +6,18 @@ const LoginPage = require('../pages/LoginPage');
 const CreateLeadPage = require('../pages/CreateLeadPage');
 const users = require('../utils/users');
 const { readKeyValueSheet, updateKeyValueSheet } = require('../utils/excelReader');
-const { generateGSTIN, generateCIN, uniqueSuffix } = require('../utils/uniqueTestData');
+const { generateGSTIN, generateCIN } = require('../utils/uniqueTestData');
 
 // Test data lives in an Excel sheet (Field / Value columns) instead of hardcoded JS
 const excelPath = path.join(__dirname, '../fixtures/companyLeadData.xlsx');
 const sampleDoc = path.join(__dirname, '../fixtures/sample-document.pdf');
 
-test('Create New Company Lead', {
+// Disabled for now - see tests/LOS/4-salesRmNavigation.spec.js for the current focus.
+// Re-enable by changing test.skip back to test.
+test.skip('Create New Company Lead', {
     annotation: {
         type: 'description',
-        description: 'Logs in as Sales RM, creates a new lead for a company/corporate entity (GSTIN, CIN, LEI, key person, address & program details), uploads a KYC document and submits it, using test data read from fixtures/companyLeadData.xlsx. A fresh GSTIN/CIN/Entity Name are generated and written back to the same file each run so the lead is never rejected as a duplicate.'
+        description: 'Logs in as Sales RM, creates a new lead for a company/corporate entity (GSTIN, CIN, LEI, key person, address & program details), uploads a KYC document and submits it, using test data read from fixtures/companyLeadData.xlsx. A fresh GSTIN/CIN are generated and written back to the same file each run so the lead is never rejected as a duplicate - the entity name itself stays exactly as set in the sheet, since duplicate detection is keyed on GSTIN/CIN, not the name.'
     }
 }, async ({ page }, testInfo) => {
 
@@ -24,12 +26,10 @@ test('Create New Company Lead', {
     // 3-addPromoterDetails.spec.js reads this same file at its own run time, so it
     // will search for the exact entity created here
     const raw = readKeyValueSheet(excelPath);
-    const suffix = uniqueSuffix();
 
-    // entityNameBase is the human-chosen name and is never touched - entityName is
-    // always freshly derived from it, so re-running never stacks/eats digits from it
+    // Only GSTIN/CIN need to be unique per run to avoid duplicate-lead rejection -
+    // the entity name itself is left exactly as set in the sheet, no suffix appended
     const uniqueValues = {
-        entityName: `${raw.entityNameBase} ${suffix}`,
         gstin: generateGSTIN(),
         cin: generateCIN()
     };

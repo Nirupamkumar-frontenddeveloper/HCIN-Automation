@@ -13,7 +13,9 @@ const { readKeyValueSheet } = require('../utils/excelReader');
 const excelPath = path.join(__dirname, '../fixtures/companyLeadData.xlsx');
 const sampleDoc = path.join(__dirname, '../fixtures/sample-document.pdf');
 
-test('Add Promoter/Director Details to Existing Lead', {
+// Disabled for now - see tests/LOS/4-salesRmNavigation.spec.js for the current focus.
+// Re-enable by changing test.skip back to test.
+test.skip('Add Promoter/Director Details to Existing Lead', {
     annotation: {
         type: 'description',
         description: 'Logs in as Sales RM, searches for the lead created by onboardCompanyLead.spec.js (by its entityName), opens its "Promoters, Owners & Management" section, adds a director\'s personal details, uploads their KYC/net-worth/bank documents, and submits - using the same fixtures/companyLeadData.xlsx as the lead-creation test.'

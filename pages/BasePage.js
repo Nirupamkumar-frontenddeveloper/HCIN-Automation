@@ -48,6 +48,11 @@ class BasePage {
         await this.step('Toggle Sidebar', '', () => this.page.getByRole('button', { name: 'toggle sidebar' }).click());
     }
 
+    // Logs out via the sidebar "Logout" link
+    async logout() {
+        await this.step('Logout', '', () => this.page.locator('div').filter({ hasText: /^Logout$/ }).click());
+    }
+
     // Open a mat-select combobox and pick an option by its visible text
     async selectOption(descriptor, optionName) {
         await this.byRole(descriptor).click();

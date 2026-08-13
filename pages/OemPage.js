@@ -20,6 +20,11 @@ class OemPage extends BasePage {
         await this.step('View OEM', '', () => this.page.locator('div').filter({ hasText: /^View$/ }).click());
     }
 
+    // View via the row's context menu (as opposed to clickView's direct View button)
+    async clickViewMenuItem() {
+        await this.step('View OEM (menu)', '', () => this.page.getByRole('menuitem').locator('div').filter({ hasText: 'View' }).click());
+    }
+
     async openCreditRatingInformation() {
         await this.step('Open Credit Rating Information', '', () => this.page.getByRole('button', { name: 'Credit Rating Information' }).click());
     }

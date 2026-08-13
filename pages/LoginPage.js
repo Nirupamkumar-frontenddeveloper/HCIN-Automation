@@ -7,9 +7,12 @@ class LoginPage {
         this.page = page;
     }
 
-    // Open the login page using the URL from the environment variables
+    // Open the login page using the URL from the environment variables. Waits only
+    // for the DOM rather than the full "load" event - some background resource on
+    // this dev environment never settles, which was making the default wait hang
+    // for the full navigation timeout even though the app itself is interactive.
     async openLOS() {
-        await this.page.goto(process.env.LOS_URL);
+        await this.page.goto(process.env.LOS_URL, { waitUntil: 'domcontentloaded' });
     }
 
     // Fill the username input field

@@ -12,6 +12,12 @@ class ProgramsPage extends BasePage {
         await this.step('Open All Programs', '', () => this.page.getByLabel('Programs').locator('div').filter({ hasText: /^All Programs$/ }).click());
     }
 
+    // Same "All Programs" entry, but for screens where it isn't scoped under a
+    // labelled Programs region (e.g. the Credit Underwriter's sidebar)
+    async openAllProgramsMenu() {
+        await this.step('Open All Programs', '', () => this.page.locator('div').filter({ hasText: /^All Programs$/ }).nth(3).click());
+    }
+
     async openAllListTab() {
         await this.step('Open All List Tab', '', () => this.page.getByRole('tab', { name: 'All List' }).click());
     }
@@ -24,8 +30,21 @@ class ProgramsPage extends BasePage {
         await this.step('View Program', '', () => this.page.locator('div').filter({ hasText: /^View$/ }).click());
     }
 
+    // View via the row's context menu (as opposed to clickView's direct View button) -
+    // needed when the row opens a dropdown where "View" text also appears in several
+    // wrapping overlay elements, making the plain div-text locator ambiguous
+    async clickViewMenuItem() {
+        await this.step('View Program (menu)', '', () => this.page.getByRole('menuitem').locator('div').filter({ hasText: 'View' }).click());
+    }
+
     async openStructureStep() {
         await this.step('Open Structure Step', '', () => this.page.getByText('2 Structure').click());
+    }
+
+    // Same Structure step, but for view-only screens where it's plain text without
+    // the wizard step number (e.g. the Credit Underwriter's program view)
+    async openStructureTab() {
+        await this.step('Open Structure Tab', '', () => this.page.getByText('Structure').click());
     }
 
     async openFinancingTab() {
@@ -34,6 +53,12 @@ class ProgramsPage extends BasePage {
 
     async openOtherTab() {
         await this.step('Open Other Tab', '', () => this.page.getByRole('tab', { name: 'Other' }).click());
+    }
+
+    // Same Other tab, but for screens where it's plain text rather than a tab role
+    // (e.g. the Credit Underwriter's program view)
+    async openOtherTabText() {
+        await this.step('Open Other Tab', '', () => this.page.getByText('Other').click());
     }
 
     async clickBackButton() {

@@ -30,6 +30,11 @@ class BasePage {
             throw err;
         }
 
+        // Give the app a moment to finish re-rendering before the next step fires - several
+        // failures so far have been the next action racing an Angular re-render mid-flight
+        // (elements detaching, dropdowns not yet open) rather than a real locator problem
+        await this.wait(500);
+
         entry.screenshotBase64 = await this.captureScreenshot();
         this.fieldReport.push(entry);
     }

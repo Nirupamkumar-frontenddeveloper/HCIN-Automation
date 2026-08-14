@@ -24,19 +24,12 @@ test('Approve Awaiting Term Loan Program', {
 
         await programsPage.openProgramsMenu();
         await programsPage.openAllProgramsForSupervisor();
-
-        // Target the newest pending program (identified by its Program Code, a stable,
-        // searchable identifier - Program Name isn't supported by this list's search)
         const programCode = await programsPage.getNewestAwaitingApprovalProgramCode();
         await programsPage.openProgramViaActionMenu(programCode);
 
         await programsPage.selectApproveDecision();
         await programsPage.submitApprovalDecision();
-
-        // Submitting redirects back to the Programs list
         await expect(page).toHaveURL(/\/program-module\/list/, { timeout: 15000 });
-
-        // Verify it actually moved out of Awaiting Approval and is now Published
         const row = await programsPage.findProgramRow(programCode);
         await expect(row, 'the approved program should still be visible in All List').toBeVisible();
 

@@ -5,13 +5,8 @@ const LoginPage = require('../../pages/LoginPage');
 const ProgramsPage = require('../../pages/ProgramsPage');
 const users = require('../../utils/users');
 
-// Anchor to search for in "Search PAN or OEM Name" - resolves to the single match
-// "AAACH2364M - HYUNDAI MOTOR INDIA LIMITED" in this dev environment
-const PAN_SEARCH_TEXT = 'Hyundai';
 
-// Required-field validation messages confirmed live on the Basic tab (only surfaced
-// once the whole form is touched via a Submit attempt - clicking "Next" from an empty
-// Basic tab does NOT validate anything, this app only validates on Submit)
+const PAN_SEARCH_TEXT = 'Hyundai';
 const REQUIRED_FIELD_ERRORS = [
     'Program Name is required.',
     'Offer Closing Date is required.',

@@ -155,6 +155,35 @@ class CreateLeadPage extends BasePage {
         await this.selectAddressType(address.type);
         await this.fillAddressLine1(address.line1);
         await this.fillPincode(address.pincode);
+        await this.verifyAddressAutoPopulated();
+    }
+
+    // District/City/State should auto-fill from the pincode
+    async verifyAddressAutoPopulated() {
+        await this.step('Verify District/City/State Auto-populated', 'District, City, State non-empty', async () => {
+            await this.wait(1500);
+            const district = await this.readFieldValue(/district/i);
+            const city = await this.readFieldValue(/city/i);
+            const state = await this.readFieldValue(/state/i);
+            if (!district || !city || !state) {
+                throw new Error(`District/City/State did not auto-populate from pincode (district="${district}", city="${city}", state="${state}")`);
+            }
+        });
+    }
+
+    async verifyNoValidationErrors() {
+        await this.step('Verify No Validation Errors Before Submit', '', async () => {
+            const { hasErrors, ngInvalidCount, matErrorCount } = await this.hasValidationErrors();
+            if (hasErrors) {
+                throw new Error(`Form still has ${ngInvalidCount} invalid field(s) / ${matErrorCount} visible error message(s) before submit`);
+            }
+        });
+    }
+
+    async captureLeadName(entityName) {
+        await this.step('Lead Name Captured', entityName, async () => {
+            this.capturedLeadName = entityName;
+        });
     }
 
     async fillOutletCode(outletCode) {

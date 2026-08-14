@@ -17,7 +17,9 @@ const {
     Header,
     Footer,
     PageNumber,
-    TableOfContents
+    PageBorderDisplay,
+    PageBorderOffsetFrom,
+    PageBorderZOrder
 } = require('docx');
 
 const reportsDir = path.join(__dirname, '../reports');
@@ -130,7 +132,6 @@ class WordReporter {
 
         const children = [
             ...this.buildCoverPage(result, passed, failed, skipped),
-            ...this.buildTableOfContents(),
             this.sectionHeading('Test Summary', HeadingLevel.HEADING_1, { pageBreakBefore: true }),
             this.buildSummaryTable()
         ];
@@ -141,19 +142,6 @@ class WordReporter {
                 this.buildTestOverviewTable(r),
                 this.buildCallout(r.description)
             );
-
-            if (r.error) {
-                children.push(
-                    new Paragraph({
-                        children: [new TextRun({ text: 'Failure Reason', bold: true, color: COLORS.failed })],
-                        spacing: { before: 100, after: 80 }
-                    }),
-                    new Paragraph({
-                        children: [new TextRun({ text: r.error, color: COLORS.failed })],
-                        spacing: { after: 200 }
-                    })
-                );
-            }
 
             if (r.fields.length) {
                 children.push(...this.buildStepPagePairs(r.fields, r.title));
@@ -172,7 +160,20 @@ class WordReporter {
             },
             sections: [{
                 properties: {
-                    page: { margin: { top: 1440, bottom: 1440, left: 1080, right: 1080 } }
+                    page: {
+                        margin: { top: 1440, bottom: 1440, left: 1080, right: 1080 },
+                        borders: {
+                            pageBorders: {
+                                display: PageBorderDisplay.ALL_PAGES,
+                                offsetFrom: PageBorderOffsetFrom.PAGE,
+                                zOrder: PageBorderZOrder.FRONT
+                            },
+                            pageBorderTop: { style: BorderStyle.SINGLE, size: 18, color: '000000', space: 24 },
+                            pageBorderRight: { style: BorderStyle.SINGLE, size: 18, color: '000000', space: 24 },
+                            pageBorderBottom: { style: BorderStyle.SINGLE, size: 18, color: '000000', space: 24 },
+                            pageBorderLeft: { style: BorderStyle.SINGLE, size: 18, color: '000000', space: 24 }
+                        }
+                    }
                 },
                 headers: { default: this.buildHeader() },
                 footers: { default: this.buildFooter() },
@@ -299,22 +300,6 @@ class WordReporter {
                 spacing: { after: 300 }
             }),
             this.buildSummaryCards(this.results.length, passed, failed, skipped)
-        ];
-    }
-
-    buildTableOfContents() {
-        return [
-            this.sectionHeading('Table of Contents', HeadingLevel.HEADING_1, { pageBreakBefore: true }),
-            new TableOfContents('Table of Contents', { hyperlink: true, headingStyleRange: '1-1' }),
-            new Paragraph({
-                children: [new TextRun({
-                    text: "(If entries don't appear, right-click here in Word and choose \"Update Field\")",
-                    italics: true,
-                    size: 18,
-                    color: COLORS.muted
-                })],
-                spacing: { before: 150 }
-            })
         ];
     }
 

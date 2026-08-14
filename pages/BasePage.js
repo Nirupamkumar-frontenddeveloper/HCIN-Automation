@@ -68,6 +68,30 @@ class BasePage {
     async wait(ms) {
         await this.page.waitForTimeout(ms);
     }
+
+    // Reads a textbox or mat-select combobox's current value by accessible name
+    async readFieldValue(nameRegex) {
+        const textbox = this.page.getByRole('textbox', { name: nameRegex }).first();
+        if (await textbox.count()) {
+            return (await textbox.inputValue().catch(() => '')).trim();
+        }
+
+        const combobox = this.page.getByRole('combobox', { name: nameRegex }).first();
+        if (await combobox.count()) {
+            const viaInputValue = await combobox.inputValue().catch(() => null);
+            if (viaInputValue !== null) return viaInputValue.trim();
+            return (await combobox.textContent().catch(() => '')).trim();
+        }
+
+        return '';
+    }
+
+    // Checks for any .ng-invalid / mat-error currently visible on the page
+    async hasValidationErrors() {
+        const ngInvalidCount = await this.page.locator('.ng-invalid:visible').count().catch(() => 0);
+        const matErrorCount = await this.page.locator('mat-error:visible, .mat-error:visible').count().catch(() => 0);
+        return { ngInvalidCount, matErrorCount, hasErrors: ngInvalidCount > 0 || matErrorCount > 0 };
+    }
 }
 
 module.exports = BasePage;

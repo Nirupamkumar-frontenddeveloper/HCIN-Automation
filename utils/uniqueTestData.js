@@ -30,4 +30,16 @@ function generateCIN() {
     return `U${randomDigits(5)}MH${new Date().getFullYear()}PTC${randomDigits(6)}`;
 }
 
-module.exports = { generateGSTIN, generateCIN };
+function generateEntityName(prefix = 'SalesLead') {
+    return `${prefix} ${Date.now()}${randomDigits(2)}`;
+}
+
+function generateMobile() {
+    return `9${randomDigits(9)}`;
+}
+
+function generateEmail(prefix = 'salesleadtest') {
+    return `${prefix}${Date.now()}@example.com`;
+}
+
+module.exports = { generateGSTIN, generateCIN, generateEntityName, generateMobile, generateEmail };

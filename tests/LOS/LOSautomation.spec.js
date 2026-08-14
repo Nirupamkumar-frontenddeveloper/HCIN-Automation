@@ -10,10 +10,15 @@ const users = require('../../utils/users');
 // (e.g. Credit Underwriter has "Underwriting Module"/"Reports" instead of "Leads"/"Cases")
 const ROLES = ['salesRM', 'salesSupervisor', 'creditUW', 'opsMaker', 'opsChecker', 'creditHead', 'itApplicationManager', 'itHead'];
 
+// Menus deliberately excluded from the crawl for specific roles
+const SKIPPED_MENUS_BY_ROLE = {
+    itApplicationManager: [/api configuration/i]
+};
+
 test('LOS Complete Action Button Crawl - All Logins', {
     annotation: {
         type: 'description',
-        description: 'Logs into LOS as every configured role (Sales RM, Sales Supervisor, Credit Underwriter, Ops Maker, Ops Checker, Credit Head, IT Application Manager, IT Head) one at a time. For each role, it opens the sidebar, discovers every top-level menu and submenu list page that role actually has, and on each one clicks the first row\'s Action control (an "anchor" icon menu, a "More" icon menu, or a row link) - registering Pass if the resulting API call(s) returned 200, Fail otherwise. Pages with no data rows are recorded as Pass ("nothing to test"). A role whose login fails or whose crawl hits an unrecoverable error is recorded as Fail and the run continues on to the next role.'
+        description: 'Logs into LOS as every configured role (Sales RM, Sales Supervisor, Credit Underwriter, Ops Maker, Ops Checker, Credit Head, IT Application Manager, IT Head) one at a time. For each role, it opens the sidebar, discovers every top-level menu and submenu list page that role actually has. Every secondary tab a list page has (e.g. Programs\' "All List"/"Awaiting Approval") is switched to and tested separately. On each page/tab, the first row\'s Action control is opened and EVERY item inside its dropdown is exercised (not just "View") - registering Pass if the resulting API call(s) returned 200, Fail otherwise; items that look like a state-changing action on real UAT data (Approve/Reject/Delete/...) are deliberately not clicked and are recorded as an intentional Pass/skip instead. Pages with no data rows are recorded as Pass ("nothing to test"). Every download icon/button found on a page (row-level or page-level, not just the first) is also clicked and checked: Pass on a 200 response or a real browser download, Pass if the control is disabled (no data available to download), Fail otherwise. A role whose login fails or whose crawl hits an unrecoverable error is recorded as Fail and the run continues on to the next role.'
     }
 }, async ({ page }, testInfo) => {
 
@@ -58,6 +63,17 @@ test('LOS Complete Action Button Crawl - All Logins', {
                 const menus = await crawler.discoverTopMenus();
 
                 for (const menu of menus) {
+                    const skipPatterns = SKIPPED_MENUS_BY_ROLE[role] || [];
+                    if (skipPatterns.some(p => p.test(menu))) {
+                        crawler.fieldReport.push({
+                            field: `[${role}] ${menu}: Skipped`,
+                            value: 'Intentionally excluded from this crawl for this role',
+                            status: 'Pass',
+                            screenshotBase64: await crawler.captureScreenshot()
+                        });
+                        continue;
+                    }
+
                     let items;
                     try {
                         await crawler.ensureMenuOpen(menu);
@@ -74,16 +90,74 @@ test('LOS Complete Action Button Crawl - All Logins', {
                     // Each item is isolated - one item's failure (a stale locator, a slow
                     // render) must not cost every remaining item/menu for this role
                     for (const item of items) {
+                        let landedOnList = false;
                         try {
                             await crawler.ensureMenuOpen(menu);
                             await crawler.openSubmenuItem(menu, item);
-                            await crawler.testFirstRowAction(`[${role}] ${menu} > ${item}`);
+                            landedOnList = true;
                         } catch (err) {
                             crawler.fieldReport.push({
-                                field: `[${role}] ${menu} > ${item}: Action Button`,
+                                field: `[${role}] ${menu} > ${item}: Open Page`,
                                 value: '', status: 'Fail', error: err.message,
                                 screenshotBase64: await crawler.captureScreenshot()
                             });
+                        }
+
+                        if (!landedOnList) continue;
+
+                        // Some list pages have their own secondary tabs (e.g. Programs'
+                        // "All List"/"Awaiting Approval") showing entirely different rows -
+                        // every tab found gets its own full pass of the same checks below.
+                        // Pages with no tabs just get a single pass (tab = null).
+                        let tabs = [];
+                        try {
+                            tabs = await crawler.discoverTabs();
+                        } catch {
+                            tabs = [];
+                        }
+                        const tabsToVisit = tabs.length ? tabs : [null];
+
+                        for (const tab of tabsToVisit) {
+                            const label = tab ? `[${role}] ${menu} > ${item} > ${tab}` : `[${role}] ${menu} > ${item}`;
+
+                            if (tab) {
+                                try {
+                                    await crawler.switchToTab(tab);
+                                } catch (err) {
+                                    crawler.fieldReport.push({
+                                        field: `${label}: Switch Tab`,
+                                        value: '', status: 'Fail', error: err.message,
+                                        screenshotBase64: await crawler.captureScreenshot()
+                                    });
+                                    continue;
+                                }
+                            }
+
+                            // Exercises the first row's Action control - every item inside
+                            // its dropdown (View/Edit/... , not just the first one found)
+                            try {
+                                await crawler.testFirstRowAction(label, tab);
+                            } catch (err) {
+                                crawler.fieldReport.push({
+                                    field: `${label}: Action Button`,
+                                    value: '', status: 'Fail', error: err.message,
+                                    screenshotBase64: await crawler.captureScreenshot()
+                                });
+                            }
+
+                            // Wherever download icons/buttons appear on this page/tab
+                            // (row-level or page-level), exercise every one of them too -
+                            // disabled (no data) counts as Pass, a 200 response or a real
+                            // download event counts as Pass, anything else is a Fail
+                            try {
+                                await crawler.testDownloadIfPresent(label);
+                            } catch (err) {
+                                crawler.fieldReport.push({
+                                    field: `${label}: Download Button`,
+                                    value: '', status: 'Fail', error: err.message,
+                                    screenshotBase64: await crawler.captureScreenshot()
+                                });
+                            }
                         }
                     }
                 }

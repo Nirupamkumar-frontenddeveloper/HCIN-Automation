@@ -57,6 +57,16 @@ module.exports = {
     lmsOpsChecker: {
         username: process.env.LMS_OPS_CHECKER_USERNAME,
         password: process.env.LMS_OPS_CHECKER_PASSWORD
+    },
+
+    lmsItApplicationManager: {
+        username: process.env.LMS_IT_APPLICATION_MANAGER_USERNAME,
+        password: process.env.LMS_IT_APPLICATION_MANAGER_PASSWORD
+    },
+
+    lmsItHead: {
+        username: process.env.LMS_IT_HEAD_USERNAME,
+        password: process.env.LMS_IT_HEAD_PASSWORD
     }
 
 };

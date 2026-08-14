@@ -44,6 +44,13 @@ class SearchLeadPage extends BasePage {
         await this.step('Open More Menu', '', () => row.getByTitle('More').click());
         await this.step('View Lead', '', () => this.page.locator('div').filter({ hasText: /^View$/ }).click());
     }
+
+    // Same as openLeadView() but selects "Edit" instead of "View"
+    async openLeadEditAction() {
+        const row = this.page.getByRole('row', { name: this.entityName });
+        await this.step('Open More Menu', '', () => row.getByTitle('More').click());
+        await this.step('Edit Lead', '', () => this.page.locator('div').filter({ hasText: /^Edit$/ }).click());
+    }
 }
 
 module.exports = SearchLeadPage;

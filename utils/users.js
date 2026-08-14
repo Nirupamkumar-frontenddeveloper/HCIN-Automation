@@ -35,6 +35,16 @@ module.exports = {
         password: process.env.CREDIT_HEAD_PASSWORD
     },
 
+    itApplicationManager: {
+        username: process.env.IT_APPLICATION_MANAGER_USERNAME,
+        password: process.env.IT_APPLICATION_MANAGER_PASSWORD
+    },
+
+    itHead: {
+        username: process.env.IT_HEAD_USERNAME,
+        password: process.env.IT_HEAD_PASSWORD
+    },
+
     // =========================
     // LMS USERS
     // =========================

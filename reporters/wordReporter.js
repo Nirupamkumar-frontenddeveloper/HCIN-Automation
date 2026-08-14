@@ -64,6 +64,19 @@ class WordReporter {
         this.startTime = new Date();
     }
 
+    // Playwright error messages (e.g. locator call logs) carry raw ANSI escape codes
+    // (ESC = 0x1B, from the dim/color styling used in "Call log:" output) and can contain
+    // other stray control bytes. The `docx` library escapes XML special characters
+    // (<, >, &) but does NOT strip actual control bytes - those are illegal in XML 1.0
+    // outright, so even one surviving ESC byte makes Word refuse to open the whole file.
+    // Every dynamic string is sanitized once here, right where it enters the reporter,
+    // so nothing downstream has to remember to do it.
+    sanitize(value) {
+        if (value === null || value === undefined) return value;
+        // eslint-disable-next-line no-control-regex
+        return String(value).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    }
+
     onTestEnd(test, result) {
         const descriptionAnnotation = test.annotations.find(a => a.type === 'description');
         const fieldReportAttachment = result.attachments.find(a => a.name === 'field-report');
@@ -77,14 +90,21 @@ class WordReporter {
             }
         }
 
+        fields = fields.map(f => ({
+            ...f,
+            field: this.sanitize(f.field),
+            value: this.sanitize(f.value),
+            error: this.sanitize(f.error)
+        }));
+
         this.results.push({
-            title: test.title,
+            title: this.sanitize(test.title),
             file: path.basename(test.location.file),
             suite: this.detectSuite(test.location.file),
-            description: descriptionAnnotation ? descriptionAnnotation.description : '-',
+            description: this.sanitize(descriptionAnnotation ? descriptionAnnotation.description : '-'),
             status: result.status,
             duration: result.duration,
-            error: result.error ? result.error.message : '',
+            error: this.sanitize(result.error ? result.error.message : ''),
             fields
         });
     }
